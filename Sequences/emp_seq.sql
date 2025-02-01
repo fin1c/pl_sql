@@ -1,3 +1,5 @@
+--Створення послідовної нумерації для таблиці employees стовбця id
+
 DECLARE
     v_max_dep_id NUMBER;
 BEGIN
