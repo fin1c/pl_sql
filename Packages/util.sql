@@ -61,7 +61,7 @@ PROCEDURE add_employee (p_first_name IN VARCHAR2,
          -- Якщо нового співробітника додають у недозволений час, викликати помилку - RAISE_APPLICATION_ERROR(-20001,'Ви можете додавати нового співробітника лише в робочий час').
              
              IF TO_CHAR(SYSDATE, 'DY', 'NLS_DATE_LANGUAGE = AMERICAN') IN ('SAT', 'SUN') OR
-                TO_CHAR(SYSDATE, 'HH24:MI:SS') NOT BETWEEN '08:00:00' AND '24:00:00' THEN
+                TO_CHAR(SYSDATE, 'HH24:MI:SS') NOT BETWEEN '08:00:00' AND '18:00:00' THEN
                 raise_application_error (-20001, 'Ви можете додавати нового співробітника лише в робочий час');
              END IF;
              
