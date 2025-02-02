@@ -4,15 +4,15 @@
 CREATE OR REPLACE PACKAGE util AS
 
     PROCEDURE add_employee (p_first_name IN VARCHAR2,
-                           p_last_name IN VARCHAR2,
-                           p_email IN VARCHAR2,
-                           p_phone_number IN VARCHAR2,
-                           p_hire_date IN DATE,
-                           p_job_id IN VARCHAR2,
-                           p_salary IN NUMBER,
-                           p_commission_pct IN NUMBER,
-                           p_manager_id IN NUMBER,
-                           p_department_id IN NUMBER);                                               
+                            p_last_name IN VARCHAR2,
+                            p_email IN VARCHAR2,
+                            p_phone_number IN VARCHAR2,
+                            p_hire_date IN DATE DEFAULT TRUNC(SYSDATE, 'DD'),
+                            p_job_id IN VARCHAR2,
+                            p_salary IN NUMBER,
+                            p_commission_pct IN NUMBER DEFAULT NULL,
+                            p_manager_id IN NUMBER DEFAULT 100,
+                            p_department_id IN NUMBER);                                               
                                           
 
 END util;
@@ -31,15 +31,15 @@ CREATE OR REPLACE PACKAGE BODY util AS
 --PROCEDURE  
 
 
-       PROCEDURE add_employee (p_first_name IN VARCHAR2,
+PROCEDURE add_employee (p_first_name IN VARCHAR2,
                                p_last_name IN VARCHAR2,
                                p_email IN VARCHAR2,
                                p_phone_number IN VARCHAR2,
-                               p_hire_date IN DATE,
+                               p_hire_date IN DATE DEFAULT TRUNC(SYSDATE, 'DD'),
                                p_job_id IN VARCHAR2,
                                p_salary IN NUMBER,
-                               p_commission_pct IN NUMBER,
-                               p_manager_id IN NUMBER,
+                               p_commission_pct IN NUMBER DEFAULT NULL,
+                               p_manager_id IN NUMBER DEFAULT 100,
                                p_department_id IN NUMBER) IS
                                
                PRAGMA autonomous_transaction; --EMPLOYEE_ID + 1 (за рахунок сіквенса)
@@ -48,6 +48,7 @@ CREATE OR REPLACE PACKAGE BODY util AS
                v_count_jobs_id         NUMBER;
                v_count_department_id   NUMBER;
                v_count_jobs_salary     NUMBER;
+               v_text_log_finish       VARCHAR(200);
       
 
          BEGIN
@@ -113,8 +114,8 @@ CREATE OR REPLACE PACKAGE BODY util AS
                                           );
                 
                   
-                 DBMS_OUTPUT.PUT_LINE('Співробітник ' || p_first_name || ', ' || p_last_name || 
-                               ', ' || p_job_id || ', ' || p_department_id || ' успішно додано до системи');
+                /* DBMS_OUTPUT.PUT_LINE('Співробітник ' || p_first_name || ', ' || p_last_name || 
+                               ', ' || p_job_id || ', ' || p_department_id || ' успішно додано до системи'); */
                                  
                  EXCEPTION
                  WHEN OTHERS THEN
@@ -124,7 +125,11 @@ CREATE OR REPLACE PACKAGE BODY util AS
               
               END;
               
-              andriyi_9wd.log_util.log_finish('add_employee');
+              v_text_log_finish := 'Співробітник ' || p_first_name || ', ' || p_last_name || 
+                                    ', ' || p_job_id || ', ' || p_department_id || ' успішно додано до системи';
+              
+              andriyi_9wd.log_util.log_finish(p_proc_name => 'add_employee',
+                                              p_text => v_text_log_finish);
               
               COMMIT;
         
