@@ -3,6 +3,10 @@
 
 CREATE OR REPLACE PACKAGE util AS
 
+     PROCEDURE fire_an_employee (p_employee_id IN NUMBER); 
+
+-----------------------------------------------------------    
+
     PROCEDURE add_employee (p_first_name IN VARCHAR2,
                             p_last_name IN VARCHAR2,
                             p_email IN VARCHAR2,
@@ -29,6 +33,122 @@ CREATE OR REPLACE PACKAGE BODY util AS
 ------------------------------------------------------------------------
         
 --PROCEDURE  
+
+        PROCEDURE work_day_time IS
+             -- Процедура перевіряє день та час при додаванні чи видаленні працівника. 
+             -- Не можна додаввати чи видаляти співробітника у суботу та неділю, а також з 18:01 до 07:59.   
+             
+             work_day VARCHAR2(10);
+             work_time VARCHAR2(10);
+             
+        BEGIN
+             
+             work_day  := TO_CHAR(SYSDATE, 'DY', 'NLS_DATE_LANGUAGE = AMERICAN');
+             work_time := TO_CHAR(SYSDATE, 'HH24:MI:SS');
+             
+                        
+             IF work_day IN ('SAT', 'SUN') OR
+                work_time NOT BETWEEN '08:00:00' AND '18:00:00' THEN
+                raise_application_error (-20001, 'Ви можете додавати чи видаляти співробітника лише в робочий час');
+             END IF; 
+             
+        END work_day_time;
+
+-----------------------------------------------------------------------------------------------    
+
+      PROCEDURE fire_an_employee (p_employee_id IN NUMBER) IS
+         
+       
+             v_text_log_finish       VARCHAR(200);
+             v_count_first_name      andriyi_9wd.employees.first_name%TYPE;
+             v_count_last_name       andriyi_9wd.employees.last_name%TYPE;
+             v_count_job_id          andriyi_9wd.employees.job_id%TYPE;
+             v_count_department_id   andriyi_9wd.employees.department_id%TYPE;
+             v_count_hire_date       andriyi_9wd.employees.hire_date%TYPE;
+             v_count_salary          andriyi_9wd.employees.salary%TYPE;
+         
+       BEGIN 
+         
+       -- Викликати  процедуру log_util.log_start
+             
+             andriyi_9wd.log_util.log_start (p_proc_name => 'fire_an_employee');
+             
+      -- Процедура перевіряє день та час при додаванні чи видаленні працівника. 
+      -- Не можна додаввати чи видаляти співробітника у суботу та неділю, а також з 18:00 до 08:00.     
+        
+          /*   work_day_time; */
+         
+         -- Перевіряти чи існує p_employee_id, що передається в таблиці EMPLOYEES. 
+         -- Якщо передали не існуючий ід співробітника, тоді помилка - RAISE_APPLICATION_ERROR(-20001,'Переданий співробітник не існує ')
+            
+             BEGIN
+                 SELECT em.first_name,
+                        em.last_name,
+                        em.job_id,
+                        em.department_id,
+                        em.hire_date,
+                        em.salary
+                 INTO v_count_first_name,
+                      v_count_last_name,
+                      v_count_job_id,
+                      v_count_department_id,
+                      v_count_hire_date,
+                      v_count_salary
+                 FROM andriyi_9wd.employees em
+                 WHERE em.employee_id = p_employee_id; 
+                 
+                 EXCEPTION
+                   WHEN NO_DATA_FOUND THEN
+                        raise_application_error (-20001, 'Переданий співробітник не існує');
+             END;
+                   
+         -- Блок видалення спвробітника   
+             BEGIN            
+             
+                 DELETE FROM andriyi_9wd.employees em
+                        WHERE em.employee_id = p_employee_id;
+                                                         
+                 EXCEPTION
+                 WHEN OTHERS THEN
+                    
+                    andriyi_9wd.log_util.log_error(p_proc_name => 'fire_an_employee',
+                                                   p_sqlerrm => SQLERRM);
+              END;  
+                                                 
+              v_text_log_finish := 'Співробітник ' || v_count_first_name || ', ' || v_count_last_name || 
+                                    ', ' || v_count_job_id || ', ' || v_count_department_id || ' успішно звільнений із системи';
+              
+          -- Записати дані в історичну таблицю employees_history.
+              BEGIN            
+          
+                 INSERT INTO andriyi_9wd.employees_history (
+                                         employee_id, first_name, last_name, hire_date, job_id, salary, department_id, dismissal_date
+                                         ) 
+                                  VALUES (
+                                          p_employee_id, v_count_first_name, v_count_last_name,
+                                          v_count_hire_date, v_count_job_id, v_count_salary, v_count_department_id, TO_DATE(SYSDATE, 'DD.MM.YYYY')
+                                          );
+                                 
+                 EXCEPTION
+                 WHEN OTHERS THEN
+                    
+                    andriyi_9wd.log_util.log_error(p_proc_name => 'fire_an_employee',
+                                                   p_sqlerrm => SQLERRM);
+              
+              END;            
+              
+              
+              
+              
+              andriyi_9wd.log_util.log_finish(p_proc_name => 'fire_an_employee',
+                                              p_text => v_text_log_finish);
+              
+              COMMIT;
+                                             
+             
+       END fire_an_employee; 
+
+---------------------------------------------------------------------------------------------------
 
 
 PROCEDURE add_employee (p_first_name IN VARCHAR2,
