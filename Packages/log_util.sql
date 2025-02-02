@@ -66,7 +66,7 @@ CREATE OR REPLACE PACKAGE BODY log_util AS
                          p_proc_name IN VARCHAR2,
                          p_text IN VARCHAR2 DEFAULT NULL) IS
                          
-         v_text VARCHAR2(100);
+         v_text VARCHAR2(200);
                                           
     BEGIN 
          
