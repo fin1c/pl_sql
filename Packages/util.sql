@@ -60,12 +60,12 @@ CREATE OR REPLACE PACKAGE BODY util AS
          
        
              v_text_log_finish       VARCHAR(200);
-             v_count_first_name      andriyi_9wd.employees.first_name%TYPE;
-             v_count_last_name       andriyi_9wd.employees.last_name%TYPE;
-             v_count_job_id          andriyi_9wd.employees.job_id%TYPE;
-             v_count_department_id   andriyi_9wd.employees.department_id%TYPE;
-             v_count_hire_date       andriyi_9wd.employees.hire_date%TYPE;
-             v_count_salary          andriyi_9wd.employees.salary%TYPE;
+             v_first_name      andriyi_9wd.employees.first_name%TYPE;
+             v_last_name       andriyi_9wd.employees.last_name%TYPE;
+             v_job_id          andriyi_9wd.employees.job_id%TYPE;
+             v_department_id   andriyi_9wd.employees.department_id%TYPE;
+             v_hire_date       andriyi_9wd.employees.hire_date%TYPE;
+             v_salary          andriyi_9wd.employees.salary%TYPE;
          
        BEGIN 
          
@@ -76,7 +76,7 @@ CREATE OR REPLACE PACKAGE BODY util AS
       -- Процедура перевіряє день та час при додаванні чи видаленні працівника. 
       -- Не можна додаввати чи видаляти співробітника у суботу та неділю, а також з 18:00 до 08:00.     
         
-          /*   work_day_time; */
+             work_day_time; 
          
          -- Перевіряти чи існує p_employee_id, що передається в таблиці EMPLOYEES. 
          -- Якщо передали не існуючий ід співробітника, тоді помилка - RAISE_APPLICATION_ERROR(-20001,'Переданий співробітник не існує ')
@@ -88,12 +88,12 @@ CREATE OR REPLACE PACKAGE BODY util AS
                         em.department_id,
                         em.hire_date,
                         em.salary
-                 INTO v_count_first_name,
-                      v_count_last_name,
-                      v_count_job_id,
-                      v_count_department_id,
-                      v_count_hire_date,
-                      v_count_salary
+                 INTO v_first_name,
+                      v_last_name,
+                      v_job_id,
+                      v_department_id,
+                      v_hire_date,
+                      v_salary
                  FROM andriyi_9wd.employees em
                  WHERE em.employee_id = p_employee_id; 
                  
@@ -115,8 +115,8 @@ CREATE OR REPLACE PACKAGE BODY util AS
                                                    p_sqlerrm => SQLERRM);
               END;  
                                                  
-              v_text_log_finish := 'Співробітник ' || v_count_first_name || ', ' || v_count_last_name || 
-                                    ', ' || v_count_job_id || ', ' || v_count_department_id || ' успішно звільнений із системи';
+              v_text_log_finish := 'Співробітник ' || v_first_name || ', ' || v_last_name || 
+                                    ', ' || v_job_id || ', ' || v_department_id || ' успішно звільнений із системи';
               
           -- Записати дані в історичну таблицю employees_history.
               BEGIN            
@@ -125,8 +125,8 @@ CREATE OR REPLACE PACKAGE BODY util AS
                                          employee_id, first_name, last_name, hire_date, job_id, salary, department_id, dismissal_date
                                          ) 
                                   VALUES (
-                                          p_employee_id, v_count_first_name, v_count_last_name,
-                                          v_count_hire_date, v_count_job_id, v_count_salary, v_count_department_id, TO_DATE(SYSDATE, 'DD.MM.YYYY')
+                                          p_employee_id, v_first_name, v_last_name,
+                                          v_hire_date, v_job_id, v_salary, v_department_id, TO_DATE(SYSDATE, 'DD.MM.YYYY')
                                           );
                                  
                  EXCEPTION
