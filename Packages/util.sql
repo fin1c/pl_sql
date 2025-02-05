@@ -3,6 +3,19 @@
 
 CREATE OR REPLACE PACKAGE util AS
 
+     PROCEDURE change_attribute_employee (p_employee_id IN NUMBER,
+                                        p_first_name IN VARCHAR2 DEFAULT NULL,
+                                        p_last_name IN VARCHAR2 DEFAULT NULL,
+                                        p_email IN VARCHAR2 DEFAULT NULL,
+                                        p_phone_number IN VARCHAR2 DEFAULT NULL,
+                                        p_job_id IN VARCHAR2 DEFAULT NULL,
+                                        p_salary IN NUMBER DEFAULT NULL,
+                                        p_commission_pct IN NUMBER DEFAULT NULL,
+                                        p_manager_id IN NUMBER DEFAULT NULL,
+                                        p_department_id IN NUMBER DEFAULT NULL
+                                        );
+----------------------------------------------------------------
+
      PROCEDURE fire_an_employee (p_employee_id IN NUMBER); 
 
 -----------------------------------------------------------    
@@ -33,6 +46,114 @@ CREATE OR REPLACE PACKAGE BODY util AS
 ------------------------------------------------------------------------
         
 --PROCEDURE  
+
+
+   PROCEDURE change_attribute_employee (p_employee_id IN NUMBER,
+                                        p_first_name IN VARCHAR2 DEFAULT NULL,
+                                        p_last_name IN VARCHAR2 DEFAULT NULL,
+                                        p_email IN VARCHAR2 DEFAULT NULL,
+                                        p_phone_number IN VARCHAR2 DEFAULT NULL,
+                                        p_job_id IN VARCHAR2 DEFAULT NULL,
+                                        p_salary IN NUMBER DEFAULT NULL,
+                                        p_commission_pct IN NUMBER DEFAULT NULL,
+                                        p_manager_id IN NUMBER DEFAULT NULL,
+                                        p_department_id IN NUMBER DEFAULT NULL) IS
+                                        
+                 
+                 v_request_update_parametr  VARCHAR2(2000);
+                                                         
+                 BEGIN
+                 -- Викликати  процедуру log_util.log_start
+             
+                    andriyi_9wd.log_util.log_start (p_proc_name => 'change_attribute_employee', 
+                                                    p_text => 'Оновлення даних по співробітнику');
+                    
+                 -- Перевірити, що мінімум в одному параметрі (окрім p_employee_id) є значення НЕ NULL,
+                 -- інакше помилка і виклик процедури log_util.log_finish.  
+                      
+                    IF p_first_name IS NULL AND
+                       p_last_name IS NULL AND
+                       p_email IS NULL AND
+                       p_phone_number  IS NULL AND
+                       p_job_id  IS NULL AND
+                       p_salary  IS NULL AND
+                       p_commission_pct  IS NULL AND
+                       p_manager_id  IS NULL AND
+                       p_department_id  IS NULL THEN
+                       
+                    log_util.log_finish (p_proc_name => 'change_attribute_employee',
+                                         p_text => 'Немає жодного параметру для оновлення атрибутів.');  
+                    raise_application_error(-20001, 'Немає жодного параметру для оновлення атрибутів.');
+                    
+                    END IF;   
+                    
+                 -- Перевіряти який з вхідних параметрів не пустий і для такого параметра зробити UPDATE в таблиці employees.
+                 -- Механізм продумати самостійно. Бажано зробити через дінамічний SQL. Але для першого варіанта цієї процедуру підійде варіант через IF..ELSIF..END IF на кожний вхідний параметр. 
+                    
+                     v_request_update_parametr := 'UPDATE andriyi_9wd.employees SET '; 
+                 
+                     IF p_first_name IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'first_name = ''' || p_first_name || ''', ';
+                     END IF;
+                     
+                     IF p_last_name IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'last_name = ''' || p_last_name || ''', ';
+                     END IF;
+                     
+                     IF p_email IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'email = ''' || p_email || ''', ';
+                     END IF; 
+                     
+                     IF p_phone_number IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'phone_number = ''' || p_phone_number || ''', ';
+                     END IF;                    
+                     
+                     IF p_job_id IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'job_id = ''' || p_job_id || ''', ';
+                     END IF; 
+                     
+                     IF p_salary IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'salary = ' || p_salary || ', ';
+                     END IF;
+                     
+                     IF p_commission_pct IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'commission_pct = ' || p_commission_pct || ', ';
+                     END IF;  
+                     
+                     IF p_manager_id IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'manager_id = ' || p_manager_id || ', ';
+                     END IF; 
+                     
+                     IF p_department_id IS NOT NULL THEN
+                        v_request_update_parametr := v_request_update_parametr || 'department_id = ' || p_department_id || ', ';
+                     END IF;                   
+                     
+                     v_request_update_parametr := RTRIM(v_request_update_parametr, ', ') || ' WHERE employee_id = ' || p_employee_id;
+                 
+             
+                    
+                     BEGIN
+                        EXECUTE IMMEDIATE v_request_update_parametr;
+                        
+                        IF SQL%ROWCOUNT > 0 THEN
+                          dbms_output.put_line('У співробітника ' || p_employee_id || ' успішно оновлені артібути.');
+                          ELSE
+                          raise_application_error(-20001, 'Немає даних для оновлення атрибутів співробітника' || p_employee_id) ;
+                          log_util.log_finish (p_proc_name => 'change_attribute_employee',
+                                         p_text => 'Немає жодного параметру для оновлення атрибутів.');
+                        END IF;
+                        
+                        EXCEPTION
+                           WHEN OTHERS THEN
+                           andriyi_9wd.log_util.log_error(p_proc_name => 'change_attribute_employee', 
+                                                          p_sqlerrm => SQLERRM, 
+                                                          p_text => 'Помилка при оновленні атрибутів');
+                           raise_application_error(-20001, 'Помилка при оновленні атрибутів: ' || SQLERRM);
+                      END;
+
+                 END change_attribute_employee;
+
+----------------------------------------------------------------------------------------------------------------------------------
 
         PROCEDURE work_day_time IS
              -- Процедура перевіряє день та час при додаванні чи видаленні працівника. 
