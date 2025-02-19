@@ -29,9 +29,9 @@ CREATE OR REPLACE PROCEDURE copy_table(
                      END AS count_symbol,
                      column_id
               FROM all_tab_columns
-              WHERE owner = p_source_scheme
+              WHERE owner = UPPER(p_source_scheme) 
               AND table_name IN (
-                                 SELECT * 
+                                 SELECT UPPER(value_list) 
                                  FROM TABLE(util.table_from_list(p_list_val => p_list_table)))
               )
         GROUP BY table_name;
