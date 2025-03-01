@@ -14,6 +14,8 @@ CREATE OR REPLACE PACKAGE util AS
     FUNCTION table_from_list (p_list_val IN VARCHAR2,
                                   p_separator IN VARCHAR2 DEFAULT ',') RETURN tab_value_list PIPELINED;
 
+----------------------------------------------------------------------------
+
 =====================================================
 ======================================================
 
